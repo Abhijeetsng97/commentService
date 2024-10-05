@@ -13,4 +13,6 @@ public interface UserService {
     User updateUser(UserDTO user, long id) throws EntityNotFoundException;
 
     void deleteUser(long id) throws EntityNotFoundException;
+
+    User getDeletedUser();
 }

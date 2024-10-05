@@ -43,6 +43,15 @@ public class UserServiceImpl implements UserService {
         userRepository.deleteById(id);
     }
 
+    @Override
+    public User getDeletedUser() {
+        User user = new User();
+        user.setFirstName("");
+        user.setLastName("");
+        user.setUsername("Deleted");
+        return user;
+    }
+
     private User convertToUser(UserDTO userDTO) {
         User user = new User();
         user.setFirstName(userDTO.getFirstName());

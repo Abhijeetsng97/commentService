@@ -4,7 +4,13 @@ import com.flipkart.hbaseobjectmapper.Family;
 import com.flipkart.hbaseobjectmapper.HBColumn;
 import com.flipkart.hbaseobjectmapper.HBRecord;
 import com.flipkart.hbaseobjectmapper.HBTable;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.PostPersist;
+import jakarta.persistence.PostUpdate;
 import lombok.Data;
+
+import static com.abhijeet.commentsService.constant.AppConstants.DISLIKES_COUNT_FIELD;
+import static com.abhijeet.commentsService.constant.AppConstants.LIKES_COUNT_FIELD;
 
 @HBTable(namespace = "default", name = "comment",
     families = {
@@ -16,11 +22,11 @@ import lombok.Data;
 @Data
 public class Comment implements HBRecord<String> {
 
-    private String rowKey;
+    private String id;
 
     private User user;
 
-    private Long id;
+    private Long uniqueSeq;
 
     private Long parentCommentId;
 
@@ -41,16 +47,15 @@ public class Comment implements HBRecord<String> {
     @HBColumn(family = "meta", column = "updatedAt")
     private Long updatedAt;
 
-    @HBColumn(family = "engagement", column = "likesCount")
+    @HBColumn(family = "engagement", column = LIKES_COUNT_FIELD)
     private Long likesCount;
 
-    @HBColumn(family = "engagement", column = "dislikesCount")
+    @HBColumn(family = "engagement", column = DISLIKES_COUNT_FIELD)
     private Long dislikesCount;
-
 
     @Override
     public String composeRowKey() {
-        return String.format("%s:%s:%s", postId, parentCommentId, id);
+        return String.format("%s:%s:%s", postId, parentCommentId, uniqueSeq);
     }
 
     @Override
@@ -58,10 +63,21 @@ public class Comment implements HBRecord<String> {
         String[] split = s.split(":");
         this.postId = Long.parseLong(split[0]);
         this.parentCommentId = Long.parseLong(split[1]);
-        this.id = Long.parseLong(split[2]);
+        this.uniqueSeq = Long.parseLong(split[2]);
     }
 
     public void updateRowKey() {
-        setRowKey(composeRowKey());
+        setId(composeRowKey());
+    }
+
+    public static Comment getCommentFromId(String id) {
+        Comment comment = new Comment();
+        comment.parseRowKey(id);
+        comment.updateRowKey();
+        return comment;
+    }
+
+    public static String getPrefixSearchKey(Long postId, Long parentCommentId) {
+        return String.format("%s:%s", postId, parentCommentId);
     }
 }

@@ -22,6 +22,7 @@ import java.util.List;
 
 import static com.abhijeet.commentsService.constant.AppConstants.MAX_DATA_FETCH_SIZE;
 import static com.abhijeet.commentsService.constant.AppConstants.TOP_LEVEL_COMMENT_PARENT_ID;
+import static com.abhijeet.commentsService.models.entity.Comment.getCommentFromId;
 import static com.abhijeet.commentsService.util.HbaseScanUtil.getScanRequestWithPrefixAndLimit;
 import static com.abhijeet.commentsService.util.HbaseScanUtil.getScanRequestWithStartRowAndLimit;
 
@@ -55,28 +56,34 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public SearchResponse<Comment> getReplies(Long postId, Long commentId, String nextToken) throws IOException {
-        return getComments(postId, commentId, nextToken);
+    public SearchResponse<Comment> getReplies(String commentId, String nextToken) throws IOException {
+        Comment comment = getCommentFromId(commentId);
+        return getComments(comment.getPostId(), comment.getUniqueSeq(), nextToken);
     }
 
     @Override
-    public Comment addReply(CommentDTO commentDTO, long postId, String rowKey) throws IOException {
+    public Comment addReply(CommentDTO commentDTO, String rowKey) throws IOException {
         Comment parentComment = new Comment();
         parentComment.parseRowKey(rowKey);
-        Comment comment = convertToComment(commentDTO, postId, parentComment.getId());
+        Comment comment = convertToComment(commentDTO, parentComment.getPostId(), parentComment.getUniqueSeq());
         updateHasChildComments(rowKey);
         commentRepository.persist(comment);
         return comment;
     }
 
-    private SearchResponse<Comment> getComments(Long postId, Long commentId, String nextToken) throws IOException {
+    @Override
+    public void updateReaction(String id, String fieldName, Long i) throws IOException {
+        commentRepository.increment(id, fieldName, i);
+    }
+
+    private SearchResponse<Comment> getComments(Long postId, Long uniqSeq, String nextToken) throws IOException {
         List<Comment> comments = new ArrayList<>();
-        Records<Comment> citizens = commentRepository.records(getScanRequest(postId, commentId, nextToken));
+        Records<Comment> citizens = commentRepository.records(getScanRequest(postId, uniqSeq, nextToken));
         citizens.forEach(x -> {
             try {
                 x.setUser(userService.getUserById(x.getUserId()));
             } catch (EntityNotFoundException e) {
-                throw new RuntimeException(e);
+                x.setUser(userService.getDeletedUser());
             }
             x.updateRowKey();
             comments.add(x);
@@ -94,7 +101,7 @@ public class CommentServiceImpl implements CommentService {
     private Comment convertToComment(CommentDTO commentDTO, long postId, long parentCommentId) {
         Comment comment = new Comment();
         comment.setParentCommentId(parentCommentId);
-        comment.setId(snowflakeIdGeneratorService.getSnowflakeId());
+        comment.setUniqueSeq(snowflakeIdGeneratorService.getSnowflakeId());
         comment.setUserId(headerUtil.getUserId());
         comment.setPostId(postId);
         comment.setContent(commentDTO.getContent());
@@ -103,12 +110,13 @@ public class CommentServiceImpl implements CommentService {
         comment.setUpdatedAt(System.currentTimeMillis());
         comment.setLikesCount(0L);
         comment.setDislikesCount(0L);
+        comment.setId(comment.composeRowKey());
         return comment;
     }
 
     private Scan getScanRequest(Long postId, Long commentId, String nextToken) {
         if (nextToken == null)
-            return getScanRequestWithPrefixAndLimit(postId + ":" + commentId, MAX_DATA_FETCH_SIZE + 1);
+            return getScanRequestWithPrefixAndLimit(Comment.getPrefixSearchKey(postId, commentId), MAX_DATA_FETCH_SIZE + 1);
         else
             return getScanRequestWithStartRowAndLimit(nextToken, MAX_DATA_FETCH_SIZE + 1);
     }

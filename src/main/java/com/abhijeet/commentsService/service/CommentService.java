@@ -11,7 +11,9 @@ public interface CommentService {
 
     SearchResponse<Comment> getComments(Long postId, String nextToken) throws IOException;
 
-    SearchResponse<Comment> getReplies(Long postId, Long commentId, String nextToken) throws IOException;
+    SearchResponse<Comment> getReplies(String commentId, String nextToken) throws IOException;
 
-    Comment addReply(CommentDTO commentDTO, long postId, String rowKey) throws IOException;
+    Comment addReply(CommentDTO commentDTO, String rowKey) throws IOException;
+
+    void updateReaction(String id, String fieldName, Long i) throws IOException;
 }

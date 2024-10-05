@@ -24,10 +24,9 @@ public class CommentController {
         return new ResponseEntity<SearchResponse<Comment>>(commentService.getComments(postId, nextToken), HttpStatus.OK);
     }
 
-    @GetMapping("/post/{postId}/comment/{commentId}")
-    public ResponseEntity<?> getReplies(@PathVariable Long postId, @PathVariable Long commentId,
-                                        @RequestParam(value = "nextToken", required = false) String nextToken) throws IOException {
-        return new ResponseEntity<SearchResponse<Comment>>(commentService.getReplies(postId, commentId, nextToken), HttpStatus.OK);
+    @GetMapping("/{commentId}/reply")
+    public ResponseEntity<?> getReplies(@PathVariable String commentId, @RequestParam(value = "nextToken", required = false) String nextToken) throws IOException {
+        return new ResponseEntity<SearchResponse<Comment>>(commentService.getReplies(commentId, nextToken), HttpStatus.OK);
     }
 
     @PostMapping("/post/{postId}")
@@ -35,9 +34,8 @@ public class CommentController {
         return new ResponseEntity<Comment>(commentService.addCommentToPost(commentDTO, postId), HttpStatus.CREATED);
     }
 
-    @PostMapping("/post/{postId}/commentKey/{rowKey}")
-    public ResponseEntity<?> postReply(@RequestBody CommentDTO commentDTO, @PathVariable long postId,
-                                       @PathVariable String rowKey) throws IOException {
-        return new ResponseEntity<Comment>(commentService.addReply(commentDTO, postId, rowKey), HttpStatus.CREATED);
+    @PostMapping("/{commentId}/reply")
+    public ResponseEntity<?> postReply(@RequestBody CommentDTO commentDTO, @PathVariable String commentId) throws IOException {
+        return new ResponseEntity<Comment>(commentService.addReply(commentDTO, commentId), HttpStatus.CREATED);
     }
 }
