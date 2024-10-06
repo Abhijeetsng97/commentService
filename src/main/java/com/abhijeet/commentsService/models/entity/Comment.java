@@ -4,9 +4,6 @@ import com.flipkart.hbaseobjectmapper.Family;
 import com.flipkart.hbaseobjectmapper.HBColumn;
 import com.flipkart.hbaseobjectmapper.HBRecord;
 import com.flipkart.hbaseobjectmapper.HBTable;
-import jakarta.persistence.PostLoad;
-import jakarta.persistence.PostPersist;
-import jakarta.persistence.PostUpdate;
 import lombok.Data;
 
 import static com.abhijeet.commentsService.constant.AppConstants.DISLIKES_COUNT_FIELD;
@@ -21,12 +18,7 @@ import static com.abhijeet.commentsService.constant.AppConstants.LIKES_COUNT_FIE
 )
 @Data
 public class Comment implements HBRecord<String> {
-
-    private String id;
-
-    private User user;
-
-    private Long uniqueSeq;
+    private Long id;
 
     private Long parentCommentId;
 
@@ -55,7 +47,7 @@ public class Comment implements HBRecord<String> {
 
     @Override
     public String composeRowKey() {
-        return String.format("%s:%s:%s", postId, parentCommentId, uniqueSeq);
+        return String.format("%s:%s:%s", postId, parentCommentId, id);
     }
 
     @Override
@@ -63,17 +55,12 @@ public class Comment implements HBRecord<String> {
         String[] split = s.split(":");
         this.postId = Long.parseLong(split[0]);
         this.parentCommentId = Long.parseLong(split[1]);
-        this.uniqueSeq = Long.parseLong(split[2]);
+        this.id = Long.parseLong(split[2]);
     }
 
-    public void updateRowKey() {
-        setId(composeRowKey());
-    }
-
-    public static Comment getCommentFromId(String id) {
+    public static Comment getCommentFromRowKey(String id) {
         Comment comment = new Comment();
         comment.parseRowKey(id);
-        comment.updateRowKey();
         return comment;
     }
 

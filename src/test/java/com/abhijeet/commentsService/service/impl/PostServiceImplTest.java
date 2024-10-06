@@ -1,9 +1,8 @@
 package com.abhijeet.commentsService.service.impl;
 
-import com.abhijeet.commentsService.models.dto.PostDTO;
+import com.abhijeet.commentsService.models.dto.request.PostRequestDTO;
 import com.abhijeet.commentsService.models.entity.Post;
 import com.abhijeet.commentsService.repository.PostRepository;
-import com.abhijeet.commentsService.service.PostService;
 import com.abhijeet.commentsService.service.SnowflakeIdGeneratorService;
 import com.abhijeet.commentsService.util.HeaderUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,7 +12,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.IOException;
 
@@ -43,15 +41,15 @@ public class PostServiceImplTest {
 
     @Test
     public void testCreatePost_Success() throws IOException {
-        PostDTO postDTO = new PostDTO();
-        postDTO.setContent("sontent");
-        postDTO.setTitle("title");
+        PostRequestDTO postRequestDTO = new PostRequestDTO();
+        postRequestDTO.setContent("sontent");
+        postRequestDTO.setTitle("title");
 
         when(headerUtil.getUserId()).thenReturn(12345L);
         when(snowflakeIdGeneratorService.getSnowflakeId()).thenReturn(1L);
         when(postRepository.persist(any(Post.class))).thenReturn(null);
 
-        Post createdPost = postServiceImpl.createPost(postDTO);
+        Post createdPost = postServiceImpl.createPost(postRequestDTO);
 
         assertNotNull(createdPost);
         verify(postRepository, times(1)).persist(any(Post.class));
@@ -67,15 +65,15 @@ public class PostServiceImplTest {
 
     @Test
     public void testCreatePost_Exception() throws IOException {
-        PostDTO postDTO = new PostDTO();
-        postDTO.setContent("content");
-        postDTO.setTitle("title");
+        PostRequestDTO postRequestDTO = new PostRequestDTO();
+        postRequestDTO.setContent("content");
+        postRequestDTO.setTitle("title");
 
         when(headerUtil.getUserId()).thenReturn(123L);
         when(snowflakeIdGeneratorService.getSnowflakeId()).thenReturn(1L);
         doThrow(new IOException("DB error")).when(postRepository).persist(any(Post.class));
 
-        assertThrows(IOException.class, () -> postServiceImpl.createPost(postDTO));
+        assertThrows(IOException.class, () -> postServiceImpl.createPost(postRequestDTO));
 
         verify(postRepository, times(1)).persist(any(Post.class));
     }

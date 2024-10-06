@@ -1,10 +1,13 @@
 package com.abhijeet.commentsService.util;
 
+import com.abhijeet.commentsService.models.dto.response.CommentResponseDTO;
+import com.abhijeet.commentsService.models.entity.Comment;
 import com.flipkart.hbaseobjectmapper.HBRecord;
-import com.abhijeet.commentsService.models.dto.SearchResponse;
+import com.abhijeet.commentsService.models.dto.response.SearchResponse;
 import lombok.experimental.UtilityClass;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 @UtilityClass
 public class SearchResponseSupport {

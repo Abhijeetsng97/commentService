@@ -1,62 +1,41 @@
 package com.abhijeet.commentsService.service.impl;
 
 import com.abhijeet.commentsService.exception.EntityNotFoundException;
-import com.abhijeet.commentsService.models.dto.UserDTO;
+import com.abhijeet.commentsService.mapper.UserMapper;
+import com.abhijeet.commentsService.models.dto.request.UserRequestDTO;
 import com.abhijeet.commentsService.models.entity.User;
 import com.abhijeet.commentsService.repository.UserRepository;
 import com.abhijeet.commentsService.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+import static com.abhijeet.commentsService.constant.AppConstants.DELETED_DATA;
+
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     @Override
-    public User saveUser(UserDTO user) {
-        return userRepository.save(convertToUser(user));
+    public User saveUser(UserRequestDTO user) {
+        return userRepository.save(userMapper.fromDTO(user));
     }
 
     @Override
-    public User getUserById(long id) throws EntityNotFoundException {
+    public User getUserById(long id) {
         Optional<User> user = userRepository.findById(id);
-        if (user.isPresent()) {
-            return user.get();
-        } else {
-            throw new EntityNotFoundException("User with id " + id + " not found");
-        }
+        return user.orElseGet(UserServiceImpl::getNonExistantUser);
     }
 
-    @Override
-    public User updateUser(UserDTO user, long id) throws EntityNotFoundException {
-        userRepository.findById(id).orElseThrow(()-> new EntityNotFoundException("User with id " + id + " not found"));
-        return userRepository.save(convertToUser(user));
-    }
-
-    @Override
-    public void deleteUser(long id) throws EntityNotFoundException {
-        userRepository.findById(id).orElseThrow(()-> new EntityNotFoundException("User with id " + id + " not found"));
-        userRepository.deleteById(id);
-    }
-
-    @Override
-    public User getDeletedUser() {
+    public static User getNonExistantUser() {
         User user = new User();
         user.setFirstName("");
         user.setLastName("");
-        user.setUsername("Deleted");
-        return user;
-    }
-
-    private User convertToUser(UserDTO userDTO) {
-        User user = new User();
-        user.setFirstName(userDTO.getFirstName());
-        user.setLastName(userDTO.getLastName());
-        user.setUsername(userDTO.getUsername());
+        user.setUsername(DELETED_DATA);
         return user;
     }
 }

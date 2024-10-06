@@ -1,10 +1,10 @@
-package com.abhijeet.commentsService.models.dto;
+package com.abhijeet.commentsService.models.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
-public class UserDTO {
+public class UserRequestDTO {
 
     @NotBlank()
     private String username;

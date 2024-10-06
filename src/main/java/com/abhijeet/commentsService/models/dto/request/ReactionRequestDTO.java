@@ -1,4 +1,4 @@
-package com.abhijeet.commentsService.models.dto;
+package com.abhijeet.commentsService.models.dto.request;
 
 import com.abhijeet.commentsService.models.enums.ReactionEntityType;
 import com.abhijeet.commentsService.models.enums.ReactionType;
@@ -8,7 +8,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class ReactionDTO {
+public class ReactionRequestDTO {
     @NotNull
     private ReactionType reactionType;
     @NotNull

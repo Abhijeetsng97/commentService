@@ -3,6 +3,8 @@ package com.abhijeet.commentsService.models.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import static com.abhijeet.commentsService.constant.AppConstants.DELETED_DATA;
+
 @Data
 @Entity
 public class User {

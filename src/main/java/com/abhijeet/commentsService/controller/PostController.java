@@ -1,7 +1,6 @@
 package com.abhijeet.commentsService.controller;
 
-import com.abhijeet.commentsService.models.dto.PostDTO;
-import com.abhijeet.commentsService.models.entity.Post;
+import com.abhijeet.commentsService.models.dto.request.PostRequestDTO;
 import com.abhijeet.commentsService.service.PostService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +20,7 @@ public class PostController {
     private PostService postService;
 
     @PostMapping("")
-    public ResponseEntity<?> savePost(@RequestBody @Valid PostDTO post) throws IOException {
-        return new ResponseEntity<Post>(postService.createPost(post), HttpStatus.CREATED);
+    public ResponseEntity<?> savePost(@RequestBody @Valid PostRequestDTO post) throws IOException {
+        return new ResponseEntity<>(postService.createPost(post), HttpStatus.CREATED);
     }
 }

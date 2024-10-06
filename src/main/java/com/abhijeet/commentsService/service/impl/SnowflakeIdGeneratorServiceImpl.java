@@ -13,7 +13,7 @@ import java.time.Instant;
 @Service
 public class SnowflakeIdGeneratorServiceImpl implements SnowflakeIdGeneratorService {
 
-    SnowflakeIdGenerator generator;
+    private SnowflakeIdGenerator generator;
 
     public SnowflakeIdGeneratorServiceImpl() {
         TimeSource timeSource = new MonotonicTimeSource(Instant.parse("2024-10-01T00:00:00Z"));

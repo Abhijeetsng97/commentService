@@ -19,13 +19,9 @@ public class Reaction implements HBRecord<String> {
 
     private ReactionEntityType reactionEntityType;
 
-    private Long entitySeqId;
+    private Long entityId;
 
     private Long userId;
-
-    private String id;
-
-    private User user;
 
     @HBColumn(family = "meta", column = "createdAt")
     private Long createdAt;
@@ -35,7 +31,7 @@ public class Reaction implements HBRecord<String> {
 
     @Override
     public String composeRowKey() {
-        return String.format("%s:%s:%s:%s", reactionType, reactionEntityType, entitySeqId, userId);
+        return String.format("%s:%s:%s:%s", reactionType, reactionEntityType, entityId, userId);
     }
 
     @Override
@@ -43,12 +39,8 @@ public class Reaction implements HBRecord<String> {
         String[] split = s.split(":");
         this.reactionType = ReactionType.valueOf(split[0]);
         this.reactionEntityType = ReactionEntityType.valueOf(split[1]);
-        this.entitySeqId = Long.parseLong(split[2]);
+        this.entityId = Long.parseLong(split[2]);
         this.userId = Long.parseLong(split[3]);
-    }
-
-    public void updateRowKey() {
-        setId(composeRowKey());
     }
 
     public static String getPrefixSearchKey(ReactionType reactionType, ReactionEntityType reactionEntityType, Long uniqSeq) {

@@ -10,3 +10,6 @@ create 'comment',
 
 create 'reaction',
     {NAME => 'meta'}
+
+create 'fieldIndex',
+    {NAME => 'data'}

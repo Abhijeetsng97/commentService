@@ -1,8 +1,10 @@
 package com.abhijeet.commentsService.service.impl;
 
-import com.abhijeet.commentsService.exception.EntityNotFoundException;
-import com.abhijeet.commentsService.models.dto.ReactionDTO;
-import com.abhijeet.commentsService.models.dto.SearchResponse;
+import com.abhijeet.commentsService.mapper.ReactionMapper;
+import com.abhijeet.commentsService.models.dto.request.ReactionRequestDTO;
+import com.abhijeet.commentsService.models.dto.response.CommentResponseDTO;
+import com.abhijeet.commentsService.models.dto.response.ReactionResponseDTO;
+import com.abhijeet.commentsService.models.dto.response.SearchResponse;
 import com.abhijeet.commentsService.models.entity.Comment;
 import com.abhijeet.commentsService.models.entity.Reaction;
 import com.abhijeet.commentsService.models.enums.ReactionEntityType;
@@ -10,90 +12,61 @@ import com.abhijeet.commentsService.models.enums.ReactionType;
 import com.abhijeet.commentsService.repository.ReactionRepository;
 import com.abhijeet.commentsService.service.CommentService;
 import com.abhijeet.commentsService.service.ReactionService;
-import com.abhijeet.commentsService.service.UserService;
-import com.abhijeet.commentsService.util.HeaderUtil;
 import com.abhijeet.commentsService.util.SearchResponseSupport;
 import com.flipkart.hbaseobjectmapper.Records;
-import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
 import org.apache.hadoop.hbase.client.Scan;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.abhijeet.commentsService.constant.AppConstants.MAX_DATA_FETCH_SIZE;
 import static com.abhijeet.commentsService.util.HbaseScanUtil.getScanRequestWithPrefixAndLimit;
 import static com.abhijeet.commentsService.util.HbaseScanUtil.getScanRequestWithStartRowAndLimit;
 
-@Slf4j
+@RequiredArgsConstructor
 @Service
 public class ReactionServiceImpl implements ReactionService {
-
-    @Autowired
-    ReactionRepository reactionRepository;
-
-    @Autowired
-    CommentService commentService;
-
-    @Autowired
-    UserService userService;
-
-    @Autowired
-    private HeaderUtil headerUtil;
+    private final ReactionRepository reactionRepository;
+    private final ReactionMapper reactionMapper;
+    private final CommentService commentService;
 
     @Override
-    public Boolean createReaction(String commentKey, ReactionDTO reactionDTO) throws IOException {
-        Comment comment = Comment.getCommentFromId(commentKey);
-        Reaction reaction = convertToReaction(comment.getUniqueSeq(), reactionDTO);
-        Boolean isPresent = reactionRepository.get(reaction.getId()) != null;
+    public Boolean createReaction(Long commentId, ReactionRequestDTO reactionRequestDTO) throws IOException {
+        Reaction reaction = reactionMapper.fromDTO(commentId, reactionRequestDTO);
+        Boolean isPresent = reactionRepository.get(reaction.composeRowKey()) != null;
         if ( ! isPresent) {
             reactionRepository.persist(reaction);
-            commentService.updateReaction(comment.getId(), reactionDTO.getReactionType().getFieldName(), 1L);
+            commentService.updateReaction(commentId, reactionRequestDTO.getReactionType().getFieldName(), 1L);
         }
         return ! isPresent;
     }
 
     @Override
-    public Boolean deleteReaction(String commentKey, ReactionDTO reactionDTO) throws IOException {
-        Comment comment = Comment.getCommentFromId(commentKey);
-        Reaction reaction = convertToReaction(comment.getUniqueSeq(), reactionDTO);
-        Boolean isPresent = reactionRepository.get(reaction.getId()) != null;
+    public Boolean deleteReaction(Long commentId, ReactionRequestDTO reactionRequestDTO) throws IOException {
+        Reaction reaction = reactionMapper.fromDTO(commentId, reactionRequestDTO);
+        Boolean isPresent = reactionRepository.get(reaction.composeRowKey()) != null;
         if (isPresent) {
             reactionRepository.delete(reaction.composeRowKey());
-            commentService.updateReaction(comment.getId(), reactionDTO.getReactionType().getFieldName(), -1L);
+            commentService.updateReaction(commentId, reactionRequestDTO.getReactionType().getFieldName(), -1L);
         }
         return isPresent;
     }
 
     @Override
-    public SearchResponse<Reaction> getUserList(ReactionEntityType reactionEntityType, String commentId, ReactionType reactionType, String nextToken) throws IOException {
-        Comment comment = Comment.getCommentFromId(commentId);
+    public SearchResponse<ReactionResponseDTO> getReactionUsers(ReactionEntityType reactionEntityType, Long commentId, ReactionType reactionType, String nextToken) throws IOException {
         List<Reaction> reactions = new ArrayList<>();
-        Records<Reaction> citizens = reactionRepository.records(getScanRequest(reactionEntityType, comment.getUniqueSeq(), reactionType, nextToken));
-        citizens.forEach(x -> {
-            try {
-                x.setUser(userService.getUserById(x.getUserId()));
-            } catch (EntityNotFoundException e) {
-                x.setUser(userService.getDeletedUser());
-            }
-            x.updateRowKey();
-            reactions.add(x);
-        });
-        return SearchResponseSupport.createSearchReponseWithPageInfo(reactions, MAX_DATA_FETCH_SIZE);
-    }
-
-    private Reaction convertToReaction(Long commentId, ReactionDTO reactionDTO) {
-        Reaction reaction = new Reaction();
-        reaction.setReactionType(reactionDTO.getReactionType());
-        reaction.setReactionEntityType(reactionDTO.getReactionEntityType());
-        reaction.setUserId(headerUtil.getUserId());
-        reaction.setEntitySeqId(commentId);
-        reaction.setCreatedAt(System.currentTimeMillis());
-        reaction.setUpdatedAt(System.currentTimeMillis());
-        reaction.updateRowKey();
-        return reaction;
+        Records<Reaction> records = reactionRepository.records(getScanRequest(reactionEntityType, commentId, reactionType, nextToken));
+        records.forEach(x -> reactions.add(x));
+        SearchResponse<Reaction> searchResponse = SearchResponseSupport.createSearchReponseWithPageInfo(reactions, MAX_DATA_FETCH_SIZE);
+        SearchResponse<ReactionResponseDTO> result = new SearchResponse<>();
+        result.setData(searchResponse.getData().stream().map(reactionMapper::toDTO).collect(Collectors.toList()));
+        result.setNextToken(searchResponse.getNextToken());
+        result.setHasMore(searchResponse.isHasMore());
+        return result;
     }
 
     private Scan getScanRequest(ReactionEntityType reactionEntityType, Long uniqSeq, ReactionType reactionType, String nextToken) {

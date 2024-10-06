@@ -1,8 +1,6 @@
 package com.abhijeet.commentsService.controller;
 
-import com.abhijeet.commentsService.models.dto.CommentDTO;
-import com.abhijeet.commentsService.models.dto.SearchResponse;
-import com.abhijeet.commentsService.models.entity.Comment;
+import com.abhijeet.commentsService.models.dto.request.CommentRequestDTO;
 import com.abhijeet.commentsService.service.CommentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,7 +14,7 @@ import java.io.IOException;
 public class CommentController {
 
     @Autowired
-    CommentService commentService;
+    private CommentService commentService;
 
     @GetMapping("/post/{postId}")
     public ResponseEntity<?> getComments(@PathVariable Long postId,
@@ -25,22 +23,22 @@ public class CommentController {
     }
 
     @GetMapping("/{commentId}/reply")
-    public ResponseEntity<?> getReplies(@PathVariable String commentId, @RequestParam(value = "nextToken", required = false) String nextToken) throws IOException {
+    public ResponseEntity<?> getReplies(@PathVariable Long commentId, @RequestParam(value = "nextToken", required = false) String nextToken) throws IOException {
         return new ResponseEntity<>(commentService.getReplies(commentId, nextToken), HttpStatus.OK);
     }
 
     @PostMapping("/post/{postId}")
-    public ResponseEntity<?> postComment(@RequestBody CommentDTO commentDTO, @PathVariable long postId) throws IOException {
-        return new ResponseEntity<>(commentService.addCommentToPost(commentDTO, postId), HttpStatus.CREATED);
+    public ResponseEntity<?> postComment(@RequestBody CommentRequestDTO commentRequestDTO, @PathVariable long postId) throws IOException {
+        return new ResponseEntity<>(commentService.addCommentToPost(commentRequestDTO, postId), HttpStatus.CREATED);
     }
 
     @PostMapping("/{commentId}/reply")
-    public ResponseEntity<?> postReply(@RequestBody CommentDTO commentDTO, @PathVariable String commentId) throws IOException {
-        return new ResponseEntity<>(commentService.addReply(commentDTO, commentId), HttpStatus.CREATED);
+    public ResponseEntity<?> postReply(@RequestBody CommentRequestDTO commentRequestDTO, @PathVariable Long commentId) throws IOException {
+        return new ResponseEntity<>(commentService.addReply(commentRequestDTO, commentId), HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{commentId}")
-    public ResponseEntity<?> deleteComment(@PathVariable String commentId) throws IOException {
+    public ResponseEntity<?> deleteComment(@PathVariable Long commentId) throws IOException {
         return new ResponseEntity<>(commentService.deleteComment(commentId), HttpStatus.CREATED);
     }
 

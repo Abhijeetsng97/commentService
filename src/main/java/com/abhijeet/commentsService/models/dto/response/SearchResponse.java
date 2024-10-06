@@ -1,4 +1,4 @@
-package com.abhijeet.commentsService.models.dto;
+package com.abhijeet.commentsService.models.dto.response;
 
 import lombok.Data;
 
