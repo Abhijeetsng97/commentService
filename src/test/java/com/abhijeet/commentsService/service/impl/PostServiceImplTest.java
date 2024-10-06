@@ -1,5 +1,6 @@
 package com.abhijeet.commentsService.service.impl;
 
+import com.abhijeet.commentsService.mapper.PostMapper;
 import com.abhijeet.commentsService.models.dto.request.PostRequestDTO;
 import com.abhijeet.commentsService.models.entity.Post;
 import com.abhijeet.commentsService.repository.PostRepository;
@@ -26,10 +27,7 @@ public class PostServiceImplTest {
     private PostRepository postRepository;
 
     @Mock
-    private SnowflakeIdGeneratorService snowflakeIdGeneratorService;
-
-    @Mock
-    private HeaderUtil headerUtil;
+    private PostMapper postMapper;
 
     @InjectMocks
     private PostServiceImpl postServiceImpl;
@@ -41,40 +39,46 @@ public class PostServiceImplTest {
 
     @Test
     public void testCreatePost_Success() throws IOException {
-        PostRequestDTO postRequestDTO = new PostRequestDTO();
-        postRequestDTO.setContent("sontent");
-        postRequestDTO.setTitle("title");
+        PostRequestDTO postRequestDTO = getPostRequestDTO();
+        Post post = getPost();
 
-        when(headerUtil.getUserId()).thenReturn(12345L);
-        when(snowflakeIdGeneratorService.getSnowflakeId()).thenReturn(1L);
         when(postRepository.persist(any(Post.class))).thenReturn(null);
-
+        when(postMapper.fromDTO(postRequestDTO)).thenReturn(post);
         Post createdPost = postServiceImpl.createPost(postRequestDTO);
 
         assertNotNull(createdPost);
         verify(postRepository, times(1)).persist(any(Post.class));
-        verify(headerUtil, times(1)).getUserId();
-        verify(snowflakeIdGeneratorService, times(1)).getSnowflakeId();
 
         assertNotNull(createdPost.getId());
-        assertEquals(1L, createdPost.getId());
-        assertEquals(12345L, createdPost.getUserId());
-        assertEquals("sontent", createdPost.getContent());
+        assertEquals("content", createdPost.getContent());
         assertEquals("title", createdPost.getTitle());
     }
 
     @Test
     public void testCreatePost_Exception() throws IOException {
-        PostRequestDTO postRequestDTO = new PostRequestDTO();
-        postRequestDTO.setContent("content");
-        postRequestDTO.setTitle("title");
+        PostRequestDTO postRequestDTO = getPostRequestDTO();
+        Post post = getPost();
 
-        when(headerUtil.getUserId()).thenReturn(123L);
-        when(snowflakeIdGeneratorService.getSnowflakeId()).thenReturn(1L);
-        doThrow(new IOException("DB error")).when(postRepository).persist(any(Post.class));
+        doThrow(new IOException()).when(postRepository).persist(any(Post.class));
+        when(postMapper.fromDTO(postRequestDTO)).thenReturn(post);
 
         assertThrows(IOException.class, () -> postServiceImpl.createPost(postRequestDTO));
 
         verify(postRepository, times(1)).persist(any(Post.class));
+    }
+
+    private PostRequestDTO getPostRequestDTO() {
+        PostRequestDTO postRequestDTO = new PostRequestDTO();
+        postRequestDTO.setContent("content");
+        postRequestDTO.setTitle("title");
+        return postRequestDTO;
+    }
+
+    private Post getPost() {
+        Post post = new Post();
+        post.setContent("content");
+        post.setTitle("title");
+        post.setId(12345L);
+        return post;
     }
 }

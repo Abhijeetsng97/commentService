@@ -5,6 +5,7 @@ import com.abhijeet.commentsService.models.enums.ReactionType;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
