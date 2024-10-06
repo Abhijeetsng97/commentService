@@ -37,7 +37,6 @@ public class PostServiceImpl implements PostService {
         post.setTitle(postDTO.getTitle());
         post.setUserId(headerUtil.getUserId());
         post.setId(snowflakeIdGeneratorService.getSnowflakeId());
-        log.info("Post id is {}", snowflakeIdGeneratorService.getSnowflakeId());
         post.setCreatedAt(System.currentTimeMillis());
         post.setUpdatedAt(System.currentTimeMillis());
         post.setLikesCount(0L);

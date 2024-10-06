@@ -21,21 +21,27 @@ public class CommentController {
     @GetMapping("/post/{postId}")
     public ResponseEntity<?> getComments(@PathVariable Long postId,
                                          @RequestParam(value = "nextToken", required = false) String nextToken) throws IOException {
-        return new ResponseEntity<SearchResponse<Comment>>(commentService.getComments(postId, nextToken), HttpStatus.OK);
+        return new ResponseEntity<>(commentService.getComments(postId, nextToken), HttpStatus.OK);
     }
 
     @GetMapping("/{commentId}/reply")
     public ResponseEntity<?> getReplies(@PathVariable String commentId, @RequestParam(value = "nextToken", required = false) String nextToken) throws IOException {
-        return new ResponseEntity<SearchResponse<Comment>>(commentService.getReplies(commentId, nextToken), HttpStatus.OK);
+        return new ResponseEntity<>(commentService.getReplies(commentId, nextToken), HttpStatus.OK);
     }
 
     @PostMapping("/post/{postId}")
     public ResponseEntity<?> postComment(@RequestBody CommentDTO commentDTO, @PathVariable long postId) throws IOException {
-        return new ResponseEntity<Comment>(commentService.addCommentToPost(commentDTO, postId), HttpStatus.CREATED);
+        return new ResponseEntity<>(commentService.addCommentToPost(commentDTO, postId), HttpStatus.CREATED);
     }
 
     @PostMapping("/{commentId}/reply")
     public ResponseEntity<?> postReply(@RequestBody CommentDTO commentDTO, @PathVariable String commentId) throws IOException {
-        return new ResponseEntity<Comment>(commentService.addReply(commentDTO, commentId), HttpStatus.CREATED);
+        return new ResponseEntity<>(commentService.addReply(commentDTO, commentId), HttpStatus.CREATED);
     }
+
+    @DeleteMapping("/{commentId}")
+    public ResponseEntity<?> deleteComment(@PathVariable String commentId) throws IOException {
+        return new ResponseEntity<>(commentService.deleteComment(commentId), HttpStatus.CREATED);
+    }
+
 }

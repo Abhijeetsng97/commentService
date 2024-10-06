@@ -16,4 +16,6 @@ public interface CommentService {
     Comment addReply(CommentDTO commentDTO, String rowKey) throws IOException;
 
     void updateReaction(String id, String fieldName, Long i) throws IOException;
+
+    Boolean deleteComment(String commentId) throws IOException;
 }

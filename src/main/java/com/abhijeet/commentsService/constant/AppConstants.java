@@ -10,4 +10,6 @@ public class AppConstants {
     public static final String LIKES_COUNT_FIELD = "likesCount";
 
     public static final String DISLIKES_COUNT_FIELD = "dislikesCount";
+
+    public static final String DELETED_DATA = "DELETED";
 }

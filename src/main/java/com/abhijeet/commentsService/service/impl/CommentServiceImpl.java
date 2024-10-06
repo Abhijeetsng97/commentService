@@ -20,8 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.abhijeet.commentsService.constant.AppConstants.MAX_DATA_FETCH_SIZE;
-import static com.abhijeet.commentsService.constant.AppConstants.TOP_LEVEL_COMMENT_PARENT_ID;
+import static com.abhijeet.commentsService.constant.AppConstants.*;
 import static com.abhijeet.commentsService.models.entity.Comment.getCommentFromId;
 import static com.abhijeet.commentsService.util.HbaseScanUtil.getScanRequestWithPrefixAndLimit;
 import static com.abhijeet.commentsService.util.HbaseScanUtil.getScanRequestWithStartRowAndLimit;
@@ -74,6 +73,17 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public void updateReaction(String id, String fieldName, Long i) throws IOException {
         commentRepository.increment(id, fieldName, i);
+    }
+
+    @Override
+    public Boolean deleteComment(String commentId) throws IOException {
+        Comment comment = commentRepository.get(commentId);
+        if(comment != null && ! comment.getContent().equals(DELETED_DATA)) {
+            comment.setContent(DELETED_DATA);
+            commentRepository.persist(comment);
+            return true;
+        }
+        return false;
     }
 
     private SearchResponse<Comment> getComments(Long postId, Long uniqSeq, String nextToken) throws IOException {
