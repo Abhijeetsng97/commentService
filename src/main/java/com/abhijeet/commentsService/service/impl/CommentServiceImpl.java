@@ -88,7 +88,6 @@ public class CommentServiceImpl implements CommentService {
             inMemoryReactionCount.clear();
         }
         for(Long commentId: reactionCounterMap.keySet()) {
-            System.out.println(commentId);
             for(String reactionField: reactionCounterMap.get(commentId).keySet()) {
                 System.out.println(reactionField + " " +  reactionCounterMap.get(commentId).get(reactionField));
                 commentRepository.increment(
